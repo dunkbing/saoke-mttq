@@ -3,9 +3,254 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Sao kê tài khoản</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 10px;
+        background-color: #f4f4f4;
+      }
+      .container {
+        max-width: 100%;
+        margin: auto;
+        background: white;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        font-size: 24px;
+        text-align: center;
+      }
+      #searchForm {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+      }
+      #searchInput {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+      #searchButton {
+        padding: 10px;
+        background-color: #5cb85c;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 4px;
+      }
+      #searchButton:hover {
+        background-color: #4cae4c;
+      }
+      #resultsTable {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      #resultsTable th,
+      #resultsTable td {
+        text-align: left;
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+      }
+      #resultsTable th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+      #pagination {
+        margin-top: 20px;
+        text-align: center;
+      }
+      #pagination button {
+        margin: 0 5px;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      #loading {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+      }
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: auto;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @media (min-width: 768px) {
+        .container {
+          max-width: 800px;
+          padding: 20px;
+        }
+        h1 {
+          font-size: 28px;
+        }
+        #searchForm {
+          flex-direction: row;
+        }
+        #searchInput {
+          flex-grow: 1;
+          margin-bottom: 0;
+          border-radius: 4px 0 0 4px;
+        }
+        #searchButton {
+          border-radius: 0 4px 4px 0;
+        }
+        #resultsTable {
+          font-size: 16px;
+        }
+      }
+    </style>
   </head>
   <body>
-    hello
+    <div class="container">
+      <h1>Tìm kiếm giao dịch</h1>
+      <form id="searchForm">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Nhập từ khoá..."
+        />
+        <button type="submit" id="searchButton">Tìm</button>
+      </form>
+      <div id="loading">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+      <div style="overflow-x: auto">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>Ngày giao dịch</th>
+              <th>Số tiền</th>
+              <th>Nội dung chi tiết</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+      <div id="pagination"></div>
+    </div>
+
+    <script>
+      // JavaScript remains the same as in the original code
+      const searchForm = document.getElementById('searchForm');
+      const searchInput = document.getElementById('searchInput');
+      const searchButton = document.getElementById('searchButton');
+      const resultsBody = document.getElementById('resultsBody');
+      const pagination = document.getElementById('pagination');
+      const loading = document.getElementById('loading');
+
+      let currentPage = 1;
+      let totalPages = 0;
+      let currentQuery = '';
+
+      function debounce(func, delay) {
+        let timeoutId;
+        return function (...args) {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+      }
+
+      async function fetchResults(query, page = 1) {
+        loading.style.display = 'block';
+        try {
+          const response = await fetch(
+            `/search?query=${encodeURIComponent(query)}&page=${page}&limit=10`
+          );
+          const data = await response.json();
+          displayResults(data.data);
+          updatePagination(data.pagination);
+          currentQuery = query;
+        } catch (error) {
+          console.error('Error fetching results:', error);
+          resultsBody.innerHTML =
+            '<tr><td colspan="3">Error fetching results. Please try again.</td></tr>';
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      function displayResults(results) {
+        resultsBody.innerHTML = results
+          .map(
+            (result) => `
+                <tr>
+                    <td>${result.date.replace('\\n', '<br>')}</td>
+                    <td>${result.value}</td>
+                    <td>${result.desc}</td>
+                </tr>
+            `
+          )
+          .join('');
+      }
+
+      function updatePagination(paginationData) {
+        currentPage = paginationData.page;
+        totalPages = paginationData.totalPages;
+
+        let paginationHtml = '';
+        if (currentPage > 1) {
+          paginationHtml += `<button onclick="changePage(${
+            currentPage - 1
+          })">Previous</button>`;
+        }
+        paginationHtml += `<span>Page ${currentPage} of ${totalPages}</span>`;
+        if (currentPage < totalPages) {
+          paginationHtml += `<button onclick="changePage(${
+            currentPage + 1
+          })">Next</button>`;
+        }
+        pagination.innerHTML = paginationHtml;
+      }
+
+      function changePage(newPage) {
+        fetchResults(currentQuery, newPage);
+      }
+
+      const debouncedSearch = debounce((query) => {
+        if (query.trim()) {
+          fetchResults(query);
+        }
+      }, 300);
+
+      searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        if (query) {
+          fetchResults(query);
+        }
+      });
+
+      searchInput.addEventListener('input', (e) => {
+        debouncedSearch(e.target.value);
+      });
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialQuery = urlParams.get('query');
+      if (initialQuery) {
+        searchInput.value = initialQuery;
+        fetchResults(initialQuery);
+      }
+    </script>
   </body>
 </html>
