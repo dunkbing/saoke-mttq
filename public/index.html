@@ -211,6 +211,12 @@
         };
       }
 
+      function formatToVND(amount) {
+        const number = Number(amount);
+        const formatted = number.toLocaleString("vi-VN");
+        return formatted + "₫";
+      }
+
       async function fetchResults(query, page = 1, pageSize = currentPageSize) {
         loading.style.display = "block";
         try {
@@ -254,7 +260,7 @@
               <tr>
                   <td>${result.date}</td>
                   <td>${result.code}</td>
-                  <td>${highlightText(result.value, queryTerms)}</td>
+                  <td>${formatToVND(result.value)}</td>
                   <td>${highlightText(result.desc, queryTerms)}</td>
               </tr>
           `,
