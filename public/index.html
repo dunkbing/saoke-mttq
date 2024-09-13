@@ -78,6 +78,10 @@
         text-align: center;
         margin-top: 20px;
       }
+      .highlight {
+        background-color: yellow;
+        font-weight: bold;
+      }
       .spinner {
         border: 4px solid #f3f3f3;
         border-top: 4px solid #3498db;
@@ -124,11 +128,7 @@
     <div class="container">
       <h1>Tìm kiếm giao dịch</h1>
       <form id="searchForm">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Nhập từ khoá..."
-        />
+        <input type="text" id="searchInput" placeholder="Nhập từ khoá..." />
         <button type="submit" id="searchButton">Tìm</button>
       </form>
       <div id="loading">
@@ -151,7 +151,6 @@
     </div>
 
     <script>
-      // JavaScript remains the same as in the original code
       const searchForm = document.getElementById('searchForm');
       const searchInput = document.getElementById('searchInput');
       const searchButton = document.getElementById('searchButton');
@@ -178,9 +177,9 @@
             `/search?query=${encodeURIComponent(query)}&page=${page}&limit=10`
           );
           const data = await response.json();
+          currentQuery = query;
           displayResults(data.data);
           updatePagination(data.pagination);
-          currentQuery = query;
         } catch (error) {
           console.error('Error fetching results:', error);
           resultsBody.innerHTML =
@@ -190,16 +189,26 @@
         }
       }
 
+      function highlightText(text, query) {
+        if (!query.trim()) return text;
+        const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regex = new RegExp(`(${escapedQuery})`, 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+      }
+
       function displayResults(results) {
         resultsBody.innerHTML = results
           .map(
             (result) => `
-                <tr>
-                    <td>${result.date.replace('\\n', '<br>')}</td>
-                    <td>${result.value}</td>
-                    <td>${result.desc}</td>
-                </tr>
-            `
+              <tr>
+                  <td>${highlightText(
+                    result.date.replace('\\n', '<br>'),
+                    currentQuery
+                  )}</td>
+                  <td>${highlightText(result.value, currentQuery)}</td>
+                  <td>${highlightText(result.desc, currentQuery)}</td>
+              </tr>
+          `
           )
           .join('');
       }
