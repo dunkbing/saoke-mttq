@@ -30,7 +30,8 @@ export async function importCSV() {
     await db.execute(`
         CREATE TABLE IF NOT EXISTS ${table} (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          TransactionDate TEXT,
+          Date TEXT,
+          Code TEXT,
           Value TEXT,
           Description TEXT
         )
@@ -74,7 +75,7 @@ async function initializeFTS() {
   try {
     await db.execute(`
       CREATE VIRTUAL TABLE IF NOT EXISTS ${tableFts} USING fts5(
-        TransactionDate, Value, Description,
+        Date, Code, Value, Description,
         content='${table}'
       );
     `);

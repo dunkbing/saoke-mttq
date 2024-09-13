@@ -226,8 +226,8 @@
           .map(
             (result) => `
               <tr>
-                  <td>${result.date.split('\\n')[0]}</td>
-                  <td>${result.date.split('\\n')[1]}</td>
+                  <td>${result.date}</td>
+                  <td>${result.code}</td>
                   <td>${highlightText(result.value, queryTerms)}</td>
                   <td>${highlightText(result.desc, queryTerms)}</td>
               </tr>

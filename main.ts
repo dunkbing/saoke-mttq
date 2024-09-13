@@ -49,7 +49,8 @@ app.get("/search", async (c) => {
 
     return c.json({
       data: result.rows.map((r) => ({
-        date: r.TransactionDate,
+        date: r.Date,
+        code: r.Code,
         value: r.Value,
         desc: r.Description,
       })),

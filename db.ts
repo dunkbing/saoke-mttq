@@ -6,5 +6,5 @@ export const db = createClient({
   authToken: config.dbAuthToken,
 });
 
-export const table = `transactions_${config.env}`;
+export const table = `transactions`;
 export const tableFts = `${table}_fts`;
