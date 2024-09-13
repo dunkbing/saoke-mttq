@@ -8,42 +8,43 @@ const app = new Hono();
 app.get("/", serveStatic({ root: "./public" }));
 
 app.get("/search", async (c) => {
-  const query = c.req.query("query");
+  const query = c.req.query("query") || "";
   const page = parseInt(c.req.query("page") || "1");
   const limit = parseInt(c.req.query("limit") || "10");
-
-  if (!query) {
-    return c.json({ error: "Query parameter is required" }, 400);
-  }
 
   if (isNaN(page) || page < 1) {
     return c.json({ error: "Invalid page parameter" }, 400);
   }
-
   if (isNaN(limit) || limit < 1 || limit > 100) {
     return c.json({ error: "Invalid limit parameter" }, 400);
   }
 
   const offset = (page - 1) * limit;
-
   console.log({ query, page, limit, offset });
 
   try {
-    const countResult = await db.execute({
-      sql: `SELECT COUNT(*) as total FROM ${tableFts}
-            WHERE ${tableFts} MATCH ?`,
-      args: [query],
-    });
+    let countSql, searchSql, args;
 
+    if (query.trim() === "") {
+      countSql = `SELECT COUNT(*) as total FROM ${tableFts}`;
+      searchSql =
+        `SELECT * FROM ${tableFts} ORDER BY Date DESC LIMIT ? OFFSET ?`;
+      args = [limit, offset];
+    } else {
+      countSql =
+        `SELECT COUNT(*) as total FROM ${tableFts} WHERE ${tableFts} MATCH ?`;
+      searchSql =
+        `SELECT * FROM ${tableFts} WHERE ${tableFts} MATCH ? ORDER BY rank LIMIT ? OFFSET ?`;
+      args = [query, limit, offset];
+    }
+
+    const countResult = await db.execute({
+      sql: countSql,
+      args: query.trim() ? [query] : [],
+    });
     const total = countResult.rows[0].total;
 
-    const result = await db.execute({
-      sql: `SELECT * FROM ${tableFts}
-            WHERE ${tableFts} MATCH ?
-            ORDER BY rank
-            LIMIT ? OFFSET ?`,
-      args: [query, limit, offset],
-    });
+    const result = await db.execute({ sql: searchSql, args });
 
     const totalPages = Math.ceil(Number(total) / limit);
 

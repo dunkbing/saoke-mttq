@@ -72,11 +72,30 @@
       #pagination {
         margin-top: 20px;
         text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
       }
-      #pagination button {
-        margin: 0 5px;
+      #pagination button,
+      #pagination input {
+        margin: 5px;
         padding: 5px 10px;
-        cursor: pointer;
+        font-size: 14px;
+      }
+      #pagination input {
+        width: 50px;
+        text-align: center;
+      }
+      @media (max-width: 768px) {
+        #pagination {
+          flex-direction: column;
+        }
+        #pagination button,
+        #pagination input {
+          width: 100%;
+          margin: 5px 0;
+        }
       }
       #loading {
         display: none;
@@ -179,7 +198,7 @@
       </div>
       <div id="pagination"></div>
       <div style="margin-top: 10px; text-align: center">
-        <label for="pageSize">Số kết quả mỗi trang:</label>
+        <label for="pageSize">Kết quả mỗi trang:</label>
         <select id="pageSize">
           <option value="10">10</option>
           <option value="20">20</option>
@@ -257,34 +276,52 @@
         resultsBody.innerHTML = results
           .map(
             (result) => `
-              <tr>
-                  <td>${result.date}</td>
-                  <td>${result.code}</td>
-                  <td>${formatToVND(result.value)}</td>
-                  <td>${highlightText(result.desc, queryTerms)}</td>
-              </tr>
-          `,
+                  <tr>
+                      <td>${result.date}</td>
+                      <td>${result.code}</td>
+                      <td>${formatToVND(result.value)}</td>
+                      <td>${highlightText(result.desc, queryTerms)}</td>
+                  </tr>
+              `,
           )
           .join("");
+      }
+
+      function goToPage() {
+        const pageInput = document.getElementById("pageInput");
+        let newPage = parseInt(pageInput.value);
+        if (isNaN(newPage) || newPage < 1) {
+          newPage = 1;
+        } else if (newPage > totalPages) {
+          newPage = totalPages;
+        }
+        if (newPage !== currentPage) {
+          changePage(newPage);
+        }
       }
 
       function updatePagination(paginationData) {
         currentPage = paginationData.page;
         totalPages = paginationData.totalPages;
 
-        let paginationHtml = "";
-        if (currentPage > 1) {
-          paginationHtml += `<button onclick="changePage(${
-            currentPage - 1
-          })">Previous</button>`;
-        }
-        paginationHtml += `<span>Trang ${currentPage} of ${totalPages}</span>`;
-        if (currentPage < totalPages) {
-          paginationHtml += `<button onclick="changePage(${
-            currentPage + 1
-          })">Next</button>`;
-        }
+        let paginationHtml = `
+          <button onclick="changePage(1)" ${currentPage === 1 ? "disabled" : ""}>First</button>
+          <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>Previous</button>
+          <span>Page <input type="number" id="pageInput" value="${currentPage}" min="1" max="${totalPages}"> of ${totalPages}</span>
+          <button onclick="goToPage()">Go</button>
+          <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""}>Next</button>
+          <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? "disabled" : ""}>Last</button>
+        `;
+
         pagination.innerHTML = paginationHtml;
+
+        document
+          .getElementById("pageInput")
+          .addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+              goToPage();
+            }
+          });
       }
 
       function changePage(newPage) {
@@ -314,12 +351,14 @@
         fetchResults(currentQuery, 1, currentPageSize);
       });
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const initialQuery = urlParams.get("query");
-      if (initialQuery) {
+      function initialLoad() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialQuery = urlParams.get("query") || "";
         searchInput.value = initialQuery;
         fetchResults(initialQuery, 1, currentPageSize);
       }
+
+      initialLoad();
     </script>
   </body>
 </html>

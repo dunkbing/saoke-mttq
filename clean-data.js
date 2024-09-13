@@ -35,8 +35,8 @@ rl.on("line", (line) => {
   } else if (valueMatch) {
     values.push(parseFloat(valueMatch[1].replace(/[.,]/g, "")));
   } else if (currentRecord && line.trim() !== "") {
-    currentRecord.description +=
-      (currentRecord.description ? " " : "") + line.trim();
+    currentRecord.description += (currentRecord.description ? " " : "") +
+      line.trim();
   }
 });
 
