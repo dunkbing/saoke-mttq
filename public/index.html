@@ -193,33 +193,43 @@
           );
           const data = await response.json();
           currentQuery = query;
-          displayResults(data.data);
+          displayResults(data.data, query);
           updatePagination(data.pagination);
         } catch (error) {
           console.error('Error fetching results:', error);
           resultsBody.innerHTML =
-            '<tr><td colspan="3">Error fetching results. Please try again.</td></tr>';
+            '<tr><td colspan="4">Error fetching results. Please try again.</td></tr>';
         } finally {
           loading.style.display = 'none';
         }
       }
 
-      function highlightText(text, query) {
-        if (!query.trim()) return text;
-        const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        const regex = new RegExp(`(${escapedQuery})`, 'gi');
-        return text.replace(regex, '<span class="highlight">$1</span>');
+      function highlightText(text, queryTerms) {
+        let highlightedText = text;
+        queryTerms.forEach((term) => {
+          const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const regex = new RegExp(`(${escapedTerm})`, 'gi');
+          highlightedText = highlightedText.replace(
+            regex,
+            '<span class="highlight">$1</span>'
+          );
+        });
+        return highlightedText;
       }
 
-      function displayResults(results) {
+      function displayResults(results, query) {
+        const queryTerms = query
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((term) => term.length > 0);
         resultsBody.innerHTML = results
           .map(
             (result) => `
               <tr>
                   <td>${result.date.split('\\n')[0]}</td>
                   <td>${result.date.split('\\n')[1]}</td>
-                  <td>${highlightText(result.value, currentQuery)}</td>
-                  <td>${highlightText(result.desc, currentQuery)}</td>
+                  <td>${highlightText(result.value, queryTerms)}</td>
+                  <td>${highlightText(result.desc, queryTerms)}</td>
               </tr>
           `
           )

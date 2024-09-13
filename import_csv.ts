@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import readline from "node:readline";
 
-import { db, table } from "./db.ts";
+import { db, table, tableFts } from "./db.ts";
 
 function parseCSVLine(line: string) {
   const values = [];
@@ -69,4 +69,24 @@ export async function importCSV() {
   }
 }
 
-importCSV();
+// importCSV();
+async function initializeFTS() {
+  try {
+    await db.execute(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS ${tableFts} USING fts5(
+        TransactionDate, Value, Description,
+        content='${table}'
+      );
+    `);
+
+    await db.execute(`
+      INSERT INTO ${tableFts}(${tableFts}) VALUES('rebuild');
+    `);
+
+    console.log("FTS virtual table initialized and populated");
+  } catch (error) {
+    console.error("Error initializing FTS:", error);
+  }
+}
+
+initializeFTS();

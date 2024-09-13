@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/deno";
 
-import { db, table } from "./db.ts";
+import { db, tableFts } from "./db.ts";
 
 const app = new Hono();
 
@@ -30,16 +30,19 @@ app.get("/search", async (c) => {
 
   try {
     const countResult = await db.execute({
-      sql: `SELECT COUNT(*) as total FROM ${table} WHERE Description LIKE ?`,
-      args: [`%${query}%`],
+      sql: `SELECT COUNT(*) as total FROM ${tableFts}
+            WHERE ${tableFts} MATCH ?`,
+      args: [query],
     });
 
     const total = countResult.rows[0].total;
 
     const result = await db.execute({
-      sql:
-        `SELECT transactionDate, value, description FROM ${table} WHERE Description LIKE ? LIMIT ? OFFSET ?`,
-      args: [`%${query}%`, limit, offset],
+      sql: `SELECT * FROM ${tableFts}
+            WHERE ${tableFts} MATCH ?
+            ORDER BY rank
+            LIMIT ? OFFSET ?`,
+      args: [query, limit, offset],
     });
 
     const totalPages = Math.ceil(Number(total) / limit);
