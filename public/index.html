@@ -140,6 +140,11 @@
         <a href="https://github.com/dunkbing/saoke-mttq" target="_blank"
           >(Source code)</a
         >
+        <a
+          href="https://pub-2a50230afd0741689fa6dcd63d40ea3f.r2.dev/transactions.csv"
+          download
+          >(Download data)</a
+        >
       </h3>
       <form id="searchForm">
         <input type="text" id="searchInput" placeholder="Nhập từ khoá..." />
@@ -246,7 +251,7 @@
             currentPage - 1
           })">Previous</button>`;
         }
-        paginationHtml += `<span>Page ${currentPage} of ${totalPages}</span>`;
+        paginationHtml += `<span>Trang ${currentPage} of ${totalPages}</span>`;
         if (currentPage < totalPages) {
           paginationHtml += `<button onclick="changePage(${
             currentPage + 1
