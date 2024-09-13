@@ -153,7 +153,8 @@
         <table id="resultsTable">
           <thead>
             <tr>
-              <th>Ngày giao dịch</th>
+              <th>Ngày</th>
+              <th>Mã giao dịch</th>
               <th>Số tiền</th>
               <th>Nội dung chi tiết</th>
             </tr>
@@ -215,10 +216,8 @@
           .map(
             (result) => `
               <tr>
-                  <td>${highlightText(
-                    result.date.replace('\\n', '<br>'),
-                    currentQuery
-                  )}</td>
+                  <td>${result.date.split('\\n')[0]}</td>
+                  <td>${result.date.split('\\n')[1]}</td>
                   <td>${highlightText(result.value, currentQuery)}</td>
                   <td>${highlightText(result.desc, currentQuery)}</td>
               </tr>
