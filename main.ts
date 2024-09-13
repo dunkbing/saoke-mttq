@@ -8,7 +8,8 @@ const app = new Hono();
 app.get("/", serveStatic({ root: "./public" }));
 
 app.get("/search", async (c) => {
-  const query = c.req.query("query") || "";
+  let query = c.req.query("query") || "";
+  query = query.replace(/[^a-zA-Z\s]/g, " ").trim();
   const page = parseInt(c.req.query("page") || "1");
   const limit = parseInt(c.req.query("limit") || "10");
 
@@ -25,7 +26,7 @@ app.get("/search", async (c) => {
   try {
     let countSql, searchSql, args;
 
-    if (query.trim() === "") {
+    if (query === "") {
       countSql = `SELECT COUNT(*) as total FROM ${tableFts}`;
       searchSql =
         `SELECT * FROM ${tableFts} ORDER BY Date DESC LIMIT ? OFFSET ?`;
@@ -40,7 +41,7 @@ app.get("/search", async (c) => {
 
     const countResult = await db.execute({
       sql: countSql,
-      args: query.trim() ? [query] : [],
+      args: query ? [query] : [],
     });
     const total = countResult.rows[0].total;
 
