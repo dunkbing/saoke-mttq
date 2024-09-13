@@ -5,5 +5,3 @@ export const config = {
   dbAuthToken: Deno.env.get("TURSO_AUTH_TOKEN")!,
   denoEnv: Deno.env.get("DENO_ENV")!,
 };
-
-console.log({ config });
