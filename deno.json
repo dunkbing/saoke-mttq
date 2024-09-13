@@ -1,0 +1,14 @@
+{
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.6.1",
+    "@libsql/client": "npm:@libsql/client@^0.10.0",
+    "csv-parser": "npm:csv-parser@^3.0.0"
+  },
+  "tasks": {
+    "start": "deno run --allow-env --allow-net --allow-read main.ts"
+  },
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "hono/jsx"
+  }
+}
