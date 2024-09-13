@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -146,7 +146,7 @@
         10/9/2024.)
       </h1>
       <h3>
-        Web tạo bởi <a href="https://db99.dev/" target="_blank">dunkbing</a>
+        By <a href="https://db99.dev/" target="_blank">dunkbing</a>
         <a href="https://github.com/dunkbing/saoke-mttq" target="_blank"
           >(Source code)</a
         >
@@ -178,7 +178,7 @@
         </table>
       </div>
       <div id="pagination"></div>
-      <div style="margin-top: 10px; text-align: center;">
+      <div style="margin-top: 10px; text-align: center">
         <label for="pageSize">Số kết quả mỗi trang:</label>
         <select id="pageSize">
           <option value="10">10</option>
@@ -190,17 +190,17 @@
     </div>
 
     <script>
-      const searchForm = document.getElementById('searchForm');
-      const searchInput = document.getElementById('searchInput');
-      const searchButton = document.getElementById('searchButton');
-      const resultsBody = document.getElementById('resultsBody');
-      const pagination = document.getElementById('pagination');
-      const loading = document.getElementById('loading');
-      const pageSizeSelect = document.getElementById('pageSize');
+      const searchForm = document.getElementById("searchForm");
+      const searchInput = document.getElementById("searchInput");
+      const searchButton = document.getElementById("searchButton");
+      const resultsBody = document.getElementById("resultsBody");
+      const pagination = document.getElementById("pagination");
+      const loading = document.getElementById("loading");
+      const pageSizeSelect = document.getElementById("pageSize");
 
       let currentPage = 1;
       let totalPages = 0;
-      let currentQuery = '';
+      let currentQuery = "";
       let currentPageSize = 10;
 
       function debounce(func, delay) {
@@ -212,32 +212,32 @@
       }
 
       async function fetchResults(query, page = 1, pageSize = currentPageSize) {
-        loading.style.display = 'block';
+        loading.style.display = "block";
         try {
           const response = await fetch(
-            `/search?query=${encodeURIComponent(query)}&page=${page}&limit=${pageSize}`
+            `/search?query=${encodeURIComponent(query)}&page=${page}&limit=${pageSize}`,
           );
           const data = await response.json();
           currentQuery = query;
           displayResults(data.data, query);
           updatePagination(data.pagination);
         } catch (error) {
-          console.error('Error fetching results:', error);
+          console.error("Error fetching results:", error);
           resultsBody.innerHTML =
             '<tr><td colspan="4">Error fetching results. Please try again.</td></tr>';
         } finally {
-          loading.style.display = 'none';
+          loading.style.display = "none";
         }
       }
 
       function highlightText(text, queryTerms) {
         let highlightedText = text;
         queryTerms.forEach((term) => {
-          const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-          const regex = new RegExp(`(${escapedTerm})`, 'gi');
+          const escapedTerm = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+          const regex = new RegExp(`(${escapedTerm})`, "gi");
           highlightedText = highlightedText.replace(
             regex,
-            '<span class="highlight">$1</span>'
+            '<span class="highlight">$1</span>',
           );
         });
         return highlightedText;
@@ -257,16 +257,16 @@
                   <td>${highlightText(result.value, queryTerms)}</td>
                   <td>${highlightText(result.desc, queryTerms)}</td>
               </tr>
-          `
+          `,
           )
-          .join('');
+          .join("");
       }
 
       function updatePagination(paginationData) {
         currentPage = paginationData.page;
         totalPages = paginationData.totalPages;
 
-        let paginationHtml = '';
+        let paginationHtml = "";
         if (currentPage > 1) {
           paginationHtml += `<button onclick="changePage(${
             currentPage - 1
@@ -291,7 +291,7 @@
         }
       }, 300);
 
-      searchForm.addEventListener('submit', (e) => {
+      searchForm.addEventListener("submit", (e) => {
         e.preventDefault();
         const query = searchInput.value.trim();
         if (query) {
@@ -299,17 +299,17 @@
         }
       });
 
-      searchInput.addEventListener('input', (e) => {
+      searchInput.addEventListener("input", (e) => {
         debouncedSearch(e.target.value);
       });
 
-      pageSizeSelect.addEventListener('change', (e) => {
+      pageSizeSelect.addEventListener("change", (e) => {
         currentPageSize = parseInt(e.target.value);
         fetchResults(currentQuery, 1, currentPageSize);
       });
 
       const urlParams = new URLSearchParams(window.location.search);
-      const initialQuery = urlParams.get('query');
+      const initialQuery = urlParams.get("query");
       if (initialQuery) {
         searchInput.value = initialQuery;
         fetchResults(initialQuery, 1, currentPageSize);
