@@ -96,6 +96,13 @@
         animation: spin 1s linear infinite;
         margin: auto;
       }
+      #pageSize {
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-left: 10px;
+      }
       @keyframes spin {
         0% {
           transform: rotate(0deg);
@@ -124,6 +131,9 @@
           border-radius: 0 4px 4px 0;
         }
         #resultsTable {
+          font-size: 16px;
+        }
+        #pageSize {
           font-size: 16px;
         }
       }
@@ -168,6 +178,15 @@
         </table>
       </div>
       <div id="pagination"></div>
+      <div style="margin-top: 10px; text-align: center;">
+        <label for="pageSize">Số kết quả mỗi trang:</label>
+        <select id="pageSize">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
     </div>
 
     <script>
@@ -177,10 +196,12 @@
       const resultsBody = document.getElementById('resultsBody');
       const pagination = document.getElementById('pagination');
       const loading = document.getElementById('loading');
+      const pageSizeSelect = document.getElementById('pageSize');
 
       let currentPage = 1;
       let totalPages = 0;
       let currentQuery = '';
+      let currentPageSize = 10;
 
       function debounce(func, delay) {
         let timeoutId;
@@ -190,11 +211,11 @@
         };
       }
 
-      async function fetchResults(query, page = 1) {
+      async function fetchResults(query, page = 1, pageSize = currentPageSize) {
         loading.style.display = 'block';
         try {
           const response = await fetch(
-            `/search?query=${encodeURIComponent(query)}&page=${page}&limit=10`
+            `/search?query=${encodeURIComponent(query)}&page=${page}&limit=${pageSize}`
           );
           const data = await response.json();
           currentQuery = query;
@@ -261,12 +282,12 @@
       }
 
       function changePage(newPage) {
-        fetchResults(currentQuery, newPage);
+        fetchResults(currentQuery, newPage, currentPageSize);
       }
 
       const debouncedSearch = debounce((query) => {
         if (query.trim()) {
-          fetchResults(query);
+          fetchResults(query, 1, currentPageSize);
         }
       }, 300);
 
@@ -274,7 +295,7 @@
         e.preventDefault();
         const query = searchInput.value.trim();
         if (query) {
-          fetchResults(query);
+          fetchResults(query, 1, currentPageSize);
         }
       });
 
@@ -282,11 +303,16 @@
         debouncedSearch(e.target.value);
       });
 
+      pageSizeSelect.addEventListener('change', (e) => {
+        currentPageSize = parseInt(e.target.value);
+        fetchResults(currentQuery, 1, currentPageSize);
+      });
+
       const urlParams = new URLSearchParams(window.location.search);
       const initialQuery = urlParams.get('query');
       if (initialQuery) {
         searchInput.value = initialQuery;
-        fetchResults(initialQuery);
+        fetchResults(initialQuery, 1, currentPageSize);
       }
     </script>
   </body>
