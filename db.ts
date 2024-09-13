@@ -6,4 +6,4 @@ export const db = createClient({
   authToken: config.dbAuthToken,
 });
 
-export const table = "transactions_" + config.denoEnv;
+export const table = "transactions_" + config.env;

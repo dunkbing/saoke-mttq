@@ -37,14 +37,15 @@ app.get("/search", async (c) => {
     const total = countResult.rows[0].total;
 
     const result = await db.execute({
-      sql: `SELECT transactionDate, value, description FROM ${table} WHERE Description LIKE ? LIMIT ? OFFSET ?`,
+      sql:
+        `SELECT transactionDate, value, description FROM ${table} WHERE Description LIKE ? LIMIT ? OFFSET ?`,
       args: [`%${query}%`, limit, offset],
     });
 
     const totalPages = Math.ceil(Number(total) / limit);
 
     return c.json({
-      data: result.rows.map(r => ({
+      data: result.rows.map((r) => ({
         date: r.TransactionDate,
         value: r.Value,
         desc: r.Description,
@@ -53,7 +54,7 @@ app.get("/search", async (c) => {
         page,
         limit,
         total,
-        totalPages
+        totalPages,
       },
     });
   } catch (error) {
