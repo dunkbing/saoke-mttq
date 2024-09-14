@@ -4,58 +4,94 @@ import readline from "node:readline";
 const inputFile = "saoke2.txt";
 const outputFile = "output.csv";
 
+const readStream = fs.createReadStream(inputFile, { encoding: "utf8" });
 const writeStream = fs.createWriteStream(outputFile);
-writeStream.write("order number,date,description,value\n");
 
 const rl = readline.createInterface({
-  input: fs.createReadStream(inputFile),
+  input: readStream,
   crlfDelay: Infinity,
 });
 
-const records = [];
-const values = [];
-let currentRecord = null;
+writeStream.write("order,datetime,description,value,subname\n");
+
+let currentRecord = {
+  order: "",
+  date: "",
+  time: "",
+  description: [],
+  value: "",
+  subname: "",
+};
+
+let lastOrderNumber = 0;
+
+function writeRecord() {
+  if (currentRecord.order) {
+    const datetime = `${currentRecord.date} ${currentRecord.time}`.trim();
+    const description = currentRecord.description.join(" ").trim();
+    writeStream.write(
+      `"${datetime}","","${currentRecord.value}","${description} ${currentRecord.subname}"\n`,
+    );
+    currentRecord = {
+      order: "",
+      date: "",
+      time: "",
+      description: [],
+      value: "",
+      subname: "",
+    };
+  }
+}
+
+function isValidOrderNumber(number) {
+  return number === lastOrderNumber + 1;
+}
 
 rl.on("line", (line) => {
-  const orderMatch = line.match(/^(\d+)\s+(\d{2}\/\d{2}\/\d{4})$/);
-  const timeMatch = line.match(/^(\d{2}:\d{2}:\d{2})$/);
-  const valueMatch = line.match(/^([\d.,]+)$/);
+  let trimmedLine = line.trim();
+  const orderMatch = trimmedLine.match(/^(\d+)\s/);
+  const timeMatch = trimmedLine.match(/^\d{2}:\d{2}:\d{2}/);
 
-  if (orderMatch) {
-    if (currentRecord) {
-      records.push(currentRecord);
+  if (orderMatch && isValidOrderNumber(parseInt(orderMatch[1]))) {
+    writeRecord();
+    lastOrderNumber = parseInt(orderMatch[1]);
+    currentRecord.order = orderMatch[1];
+    trimmedLine = trimmedLine.replace(currentRecord.order, "").trim();
+
+    const dateMatch = trimmedLine.match(/(\d{2}\/\d{2}\/\d{4})/);
+    if (dateMatch) {
+      currentRecord.date = dateMatch[1];
+      trimmedLine = trimmedLine.replace(currentRecord.date, "").trim();
     }
-    currentRecord = {
-      orderNumber: orderMatch[1],
-      date: orderMatch[2],
-      description: "",
-    };
-  } else if (timeMatch && currentRecord) {
-    currentRecord.date += " " + timeMatch[1];
-  } else if (valueMatch) {
-    values.push(parseFloat(valueMatch[1].replace(/[.,]/g, "")));
-  } else if (currentRecord && line.trim() !== "") {
-    currentRecord.description += (currentRecord.description ? " " : "") +
-      line.trim();
+
+    const parts = trimmedLine.split(/\s{2,}/);
+    currentRecord.description.push(parts[0]);
+    const parts2 = parts[1].split(" ");
+    currentRecord.value = parts2[0].replace(/\./g, "");
+    currentRecord.subname = parts2.slice(1).join(" ");
+  } else if (timeMatch) {
+    currentRecord.time = timeMatch[0];
+    trimmedLine = trimmedLine.replace(currentRecord.time, "").trim();
+    const parts = trimmedLine.split(/\s{2,}/);
+    if (parts[0]) {
+      currentRecord.description.push(parts[0]);
+    }
+    if (parts[1]) {
+      currentRecord.subname += ` ${parts[1]}`;
+    }
+  } else {
+    const parts = trimmedLine.split(/\s{2,}/);
+    if (parts[0]) {
+      currentRecord.description.push(parts[0]);
+    }
+    if (parts[1]) {
+      currentRecord.subname += ` ${parts[1]}`;
+    }
   }
 });
 
 rl.on("close", () => {
-  if (currentRecord) {
-    records.push(currentRecord);
-  }
-
-  const mergedRecords = records.map((record, index) => ({
-    ...record,
-    value: values[index] || "",
-  }));
-
-  mergedRecords.forEach((record) => {
-    writeStream.write(
-      `"${record.date}","","${record.value}","${record.description}"\n`,
-    );
-  });
-
+  writeRecord();
   writeStream.end();
-  console.log("Data extraction completed. Output saved to", outputFile);
+  console.log("CSV file has been created successfully.");
 });
